@@ -27,7 +27,6 @@ export const AppComponent: React.FC<AppProps> = () => {
   );
 
   const mapContainer = (container: { [key: string]: any }): Container => {
-    console.log(container);
     const {
       Id: id,
       Names,

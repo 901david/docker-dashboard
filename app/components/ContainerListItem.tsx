@@ -36,11 +36,15 @@ export interface Container {
 interface IContainerListItemInitialState {
   logStreams: Array<string>;
   isStreaming: boolean;
+  isLarge: boolean;
+  copySuccess: boolean;
 }
 
 const ContainerListItemInitialState: IContainerListItemInitialState = {
   logStreams: [],
-  isStreaming: false
+  isStreaming: false,
+  isLarge: false,
+  copySuccess: false
 };
 
 export const ContainerListItem: React.FC<Container> = ({
@@ -54,11 +58,13 @@ export const ContainerListItem: React.FC<Container> = ({
   mounts,
   command
 }) => {
-  const [{ logStreams, isStreaming }, valueSetter] = useMappedState(
-    ContainerListItemInitialState
-  );
+  const [
+    { logStreams, isStreaming, isLarge, copySuccess },
+    valueSetter
+  ] = useMappedState(ContainerListItemInitialState);
 
   const logRef: React.RefObject<HTMLDivElement> = React.createRef();
+  const idRef: React.RefObject<HTMLInputElement> = React.createRef();
   const isRunning = state === "running";
 
   const onActionButtonClick = () => {
@@ -120,43 +126,31 @@ export const ContainerListItem: React.FC<Container> = ({
     updateLogScroll();
   }, [logStreams]);
 
+  const changeSize = (isLarge: boolean) => {
+    valueSetter("isLarge", !isLarge);
+  };
+
+  const copyToClipboard = (ref: React.RefObject<HTMLInputElement>) => {
+    if (ref.current !== null) {
+      ref.current.style.display = "block";
+      ref.current.select();
+      document.execCommand("copy");
+      ref.current.style.display = "none";
+      valueSetter("copySuccess", true);
+      setTimeout(() => {
+        valueSetter("copySuccess", false);
+      }, 2000);
+    }
+  };
+
   return (
     <>
-      <div className="col-sm-12">
+      <div
+        style={{ transition: "all 1s", height: "300px", overflow: "auto" }}
+        className={`${isLarge ? "col-sm-12" : "col-sm-6"} give-transition`}
+      >
         <div className={classes}>
           <div className="panel-heading">{name}</div>
-          <div className="panel-body">
-            Id: {id}
-            <br />
-            Status: {status}
-            <br />
-            Image: {image}
-            <br />
-            Volumes: <span>{volumes.join(", ")}</span>
-            <br />
-            Mounts:{" "}
-            {mounts.map(
-              ({ Type, Source, Destination, Mode, RW, Propagation }) => (
-                <>
-                  <p>Type: {Type}</p>
-                  <p>Source: {Source}</p>
-                  <p>Destination: {Destination}</p>
-                  <p>Mode: {Mode}</p>
-                  <p>RW: {RW}</p>
-                  <p>Propagation: {Propagation}</p>
-                </>
-              )
-            )}
-            <br />
-            Ports:{" "}
-            {ports.map((portObj: Port) => {
-              return Object.keys(portObj).map((portData: keyof Port) => {
-                return <span style={{ margin: "3px" }}>{portData}</span>;
-              });
-            })}
-            <br />
-            Command: <span>{command}</span>
-          </div>
           <div className="panel-footer">
             <button onClick={onActionButtonClick} className="btn btn-default">
               {buttonText}
@@ -175,7 +169,61 @@ export const ContainerListItem: React.FC<Container> = ({
             <button onClick={onRemoveContainer} className="btn btn-default">
               Remove
             </button>
+            <button
+              onClick={() => changeSize(isLarge)}
+              className="btn btn-default"
+            >
+              {isLarge ? "Shrink" : "Expand"}
+            </button>
           </div>
+        </div>
+        <div className="panel-body">
+          Id: <span title={id}>{id.slice(0, 16) + "..."}</span>{" "}
+          {document.queryCommandSupported("copy") && (
+            <div>
+              <input
+                style={{
+                  display: "none",
+                  position: "absolute",
+                  left: "-3000px"
+                }}
+                ref={idRef}
+                type="text"
+                value={id}
+              />
+              <button onClick={() => copyToClipboard(idRef)}>Copy</button>
+              {copySuccess && <span>Copied!</span>}
+            </div>
+          )}
+          <br />
+          Status: {status}
+          <br />
+          Image: {image}
+          <br />
+          Volumes: <span>{volumes.join(", ")}</span>
+          <br />
+          Mounts:{" "}
+          {mounts.map(
+            ({ Type, Source, Destination, Mode, RW, Propagation }) => (
+              <>
+                <p>Type: {Type}</p>
+                <p>Source: {Source}</p>
+                <p>Destination: {Destination}</p>
+                <p>Mode: {Mode}</p>
+                <p>RW: {RW}</p>
+                <p>Propagation: {Propagation}</p>
+              </>
+            )
+          )}
+          <br />
+          Ports:{" "}
+          {ports.map((portObj: Port) => {
+            return Object.keys(portObj).map((portData: keyof Port) => {
+              return <span style={{ margin: "3px" }}>{portData}</span>;
+            });
+          })}
+          <br />
+          Command: <span>{command}</span>
         </div>
       </div>
       {isStreaming && (

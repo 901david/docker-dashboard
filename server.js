@@ -53,7 +53,6 @@ io.on("connection", socket => {
       let results = [];
       logStream.on("data", chunk => {
         results.push(chunk.toString("utf8"));
-        console.log(results);
         if (results.length > 100) {
           io.emit("container.return_piped_logs", { results });
           results = [];
