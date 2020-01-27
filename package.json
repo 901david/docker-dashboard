@@ -23,6 +23,7 @@
     "dockerode": "^3.0.2",
     "express": "^4.17.1",
     "lodash": "^4.17.15",
+    "react-use-mapped-state": "^2.0.3",
     "socket.io": "^2.3.0",
     "typescript": "^3.7.5"
   },

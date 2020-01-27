@@ -1,30 +1,57 @@
 import * as React from "react";
 import * as _ from "lodash";
-
 import * as io from "socket.io-client";
+import { useMappedState } from "react-use-mapped-state";
 
 import { Container } from "./ContainerListItem";
 import { ContainerList } from "./ContainerList";
 import { NewContainerDialog } from "./newContainerModal";
 import { DialogTrigger } from "./dialogTrigger";
 
-interface AppState {
-  containers?: Container[];
-  stoppedContainers?: Container[];
+interface AppProps {}
+interface AppMappedState {
+  containers: Container[];
+  stoppedContainers: Container[];
 }
 
-interface AppProps {}
+const initialState: AppMappedState = {
+  containers: [],
+  stoppedContainers: []
+};
 
 const socket = io.connect();
 
-export class AppComponent extends React.Component<AppProps, AppState> {
-  constructor(props: AppProps) {
-    super(props);
+export const AppComponent: React.FC<AppProps> = () => {
+  const [{ containers, stoppedContainers }, valueSetter] = useMappedState(
+    initialState
+  );
 
-    this.state = {
-      containers: [],
-      stoppedContainers: []
+  const mapContainer = (container: { [key: string]: any }): Container => {
+    const { Id: id, Names, State: state, Status, Image: image } = container;
+    const name = _.chain(Names)
+      .map((n: string) => n.substr(1))
+      .join(", ")
+      .value();
+    const status = `${state} (${Status})`;
+    return {
+      id,
+      name,
+      state,
+      status,
+      image
     };
+  };
+
+  const onRunImage = (name: String): void => {
+    socket.emit("image.run", { name });
+  };
+
+  React.useEffect(() => {
+    socket.emit("containers.list");
+
+    socket.on("image.error", (args: any) => {
+      alert(args.message.json.message);
+    });
 
     socket.on("containers.list", (containers: any) => {
       const partitioned = _.partition(
@@ -32,54 +59,22 @@ export class AppComponent extends React.Component<AppProps, AppState> {
         (c: any) => c.State == "running"
       );
 
-      this.setState({
-        containers: partitioned[0].map(this.mapContainer),
-        stoppedContainers: partitioned[1].map(this.mapContainer)
-      });
+      valueSetter("containers", partitioned[0].map(mapContainer));
+      valueSetter("stoppedContainers", partitioned[1].map(mapContainer));
     });
+  }, []);
 
-    socket.on("image.error", (args: any) => {
-      alert(args.message.json.message);
-    });
-  }
+  return (
+    <div className="container">
+      <h1 className="page-header">Docker Dashboard</h1>
+      <DialogTrigger id="newContainerModal" buttonText="New container" />
+      <ContainerList title="Running" containers={containers} />
+      <ContainerList
+        title="Stopped containers"
+        containers={stoppedContainers}
+      />
 
-  componentDidMount() {
-    socket.emit("containers.list");
-  }
-
-  mapContainer(container: any): Container {
-    return {
-      id: container.Id,
-      name: _.chain(container.Names)
-        .map((n: string) => n.substr(1))
-        .join(", ")
-        .value(),
-      state: container.State,
-      status: `${container.State} (${container.Status})`,
-      image: container.Image
-    };
-  }
-
-  onRunImage(name: String) {
-    socket.emit("image.run", { name: name });
-  }
-
-  render() {
-    return (
-      <div className="container">
-        <h1 className="page-header">Docker Dashboard</h1>
-        <DialogTrigger id="newContainerModal" buttonText="New container" />
-        <ContainerList title="Running" containers={this.state.containers} />
-        <ContainerList
-          title="Stopped containers"
-          containers={this.state.stoppedContainers}
-        />
-
-        <NewContainerDialog
-          id="newContainerModal"
-          onRunImage={this.onRunImage.bind(this)}
-        />
-      </div>
-    );
-  }
-}
+      <NewContainerDialog id="newContainerModal" onRunImage={onRunImage} />
+    </div>
+  );
+};
