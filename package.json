@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack -p && node server.js",
-    "start-dev": "./node_modules/.bin/concurrently \"nodemon server.js\" \"webpack --watch\""
+    "start-dev": "./node_modules/.bin/concurrently \"nodemon server.js\" \"webpack --watch\"",
+    "webpack": "webpack --watch",
+    "backend": "nodemon server.js"
   },
   "repository": {
     "type": "git",
@@ -19,12 +21,14 @@
   },
   "homepage": "https://github.com/901david/docker-dashboard#readme",
   "dependencies": {
+    "@types/morgan": "^1.7.37",
     "classnames": "^2.2.6",
     "dockerode": "^3.0.2",
     "express": "^4.17.1",
     "lodash": "^4.17.15",
     "react-use-mapped-state": "^2.0.3",
     "socket.io": "^2.3.0",
+    "stream": "0.0.2",
     "typescript": "^3.7.5"
   },
   "devDependencies": {
@@ -37,6 +41,7 @@
     "@types/socket.io": "^2.1.4",
     "@types/socket.io-client": "^1.4.32",
     "concurrently": "^5.1.0",
+    "morgan": "^1.9.1",
     "nodemon": "^2.0.2",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",

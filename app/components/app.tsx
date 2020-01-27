@@ -27,7 +27,19 @@ export const AppComponent: React.FC<AppProps> = () => {
   );
 
   const mapContainer = (container: { [key: string]: any }): Container => {
-    const { Id: id, Names, State: state, Status, Image: image } = container;
+    console.log(container);
+    const {
+      Id: id,
+      Names,
+      State: state,
+      Status,
+      Image: image,
+      Mounts: mounts,
+      Volumes,
+      Command: command,
+      Ports: ports
+    } = container;
+    const volumes = Volumes ? Object.keys(Volumes) : [];
     const name = _.chain(Names)
       .map((n: string) => n.substr(1))
       .join(", ")
@@ -38,7 +50,11 @@ export const AppComponent: React.FC<AppProps> = () => {
       name,
       state,
       status,
-      image
+      image,
+      mounts,
+      volumes,
+      ports,
+      command
     };
   };
 
