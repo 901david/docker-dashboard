@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Container, ContainerListItem } from "./ContainerListItem";
 
-export class ContainerListProps {
+interface ContainerListProps {
   containers: Container[];
   title?: string;
 }
