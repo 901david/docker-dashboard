@@ -6,20 +6,19 @@ export class ContainerListProps {
   title?: string;
 }
 
-export class ContainerList extends React.Component<ContainerListProps, {}> {
-  render() {
-    return (
-      <div>
-        <h3>{this.props.title}</h3>
-        <p>
-          {this.props.containers.length == 0 ? "No containers to show" : ""}
-        </p>
-        <div className="row">
-          {this.props.containers.map(c => (
-            <ContainerListItem key={c.name} {...c} />
-          ))}
-        </div>
+export const ContainerList: React.FC<ContainerListProps> = ({
+  containers,
+  title
+}) => {
+  return (
+    <div>
+      <h3>{title}</h3>
+      <p>{containers.length == 0 ? "No containers to show" : ""}</p>
+      <div className="row">
+        {containers.map(container => (
+          <ContainerListItem key={container.name} {...container} />
+        ))}
       </div>
-    );
-  }
-}
+    </div>
+  );
+};

@@ -12,40 +12,39 @@ export interface Container {
   status: string;
 }
 
-export class ContainerListItem extends React.Component<Container, {}> {
-  isRunning() {
-    return this.props.state === "running";
-  }
+export const ContainerListItem: React.FC<Container> = ({
+  id,
+  name,
+  image,
+  state,
+  status
+}) => {
+  const isRunning = state === "running";
 
-  onActionButtonClick() {
-    const evt = this.isRunning() ? "container.stop" : "container.start";
-    socket.emit(evt, { id: this.props.id });
-  }
+  const onActionButtonClick = () => {
+    const evt = isRunning ? "container.stop" : "container.start";
+    socket.emit(evt, { id });
+  };
 
-  render() {
-    const panelClass = this.isRunning() ? "success" : "default";
-    const classes = classNames("panel", `panel-${panelClass}`);
-    const buttonText = this.isRunning() ? "Stop" : "Start";
+  const panelClass = isRunning ? "success" : "default";
+  const classes = classNames("panel", `panel-${panelClass}`);
+  const buttonText = isRunning ? "Stop" : "Start";
 
-    return (
-      <div className="col-sm-3">
-        <div className={classes}>
-          <div className="panel-heading">{this.props.name}</div>
-          <div className="panel-body">
-            Status: {this.props.status}
-            <br />
-            Image: {this.props.image}
-          </div>
-          <div className="panel-footer">
-            <button
-              onClick={this.onActionButtonClick.bind(this)}
-              className="btn btn-default"
-            >
-              {buttonText}
-            </button>
-          </div>
+  return (
+    <div className="col-sm-3">
+      <div className={classes}>
+        <div className="panel-heading">{name}</div>
+        <div className="panel-body">
+          Status: {status}
+          <br />
+          Image: {image}
+        </div>
+        <div className="panel-footer">
+          <button onClick={onActionButtonClick} className="btn btn-default">
+            {buttonText}
+          </button>
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};

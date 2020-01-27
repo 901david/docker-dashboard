@@ -5,17 +5,14 @@ export interface DialogTriggerProperties {
   buttonText: string;
 }
 
-export class DialogTrigger extends React.Component<
-  DialogTriggerProperties,
-  {}
-> {
-  render() {
-    const href = `#${this.props.id}`;
-
-    return (
-      <a className="btn btn-primary" data-toggle="modal" href={href}>
-        {this.props.buttonText}
-      </a>
-    );
-  }
-}
+export const DialogTrigger: React.FC<DialogTriggerProperties> = ({
+  id,
+  buttonText
+}) => {
+  const href = `#${id}`;
+  return (
+    <a className="btn btn-primary" data-toggle="modal" href={href}>
+      {buttonText}
+    </a>
+  );
+};
