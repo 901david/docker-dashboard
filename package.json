@@ -1,0 +1,47 @@
+{
+  "name": "docker-dashboard",
+  "version": "1.0.0",
+  "description": "a basic docker dashboard built with . react, typescript, socket.io, and . docker",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack -p && node server.js",
+    "start-dev": "./node_modules/.bin/concurrently \"nodemon server.js\" \"webpack --watch\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/901david/docker-dashboard.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/901david/docker-dashboard/issues"
+  },
+  "homepage": "https://github.com/901david/docker-dashboard#readme",
+  "dependencies": {
+    "classnames": "^2.2.6",
+    "dockerode": "^3.0.2",
+    "express": "^4.17.1",
+    "lodash": "^4.17.15",
+    "socket.io": "^2.3.0",
+    "typescript": "^3.7.5"
+  },
+  "devDependencies": {
+    "@types/bootstrap": "^4.3.1",
+    "@types/classnames": "^2.2.9",
+    "@types/jquery": "^3.3.31",
+    "@types/lodash": "^4.14.149",
+    "@types/react": "^16.9.19",
+    "@types/react-dom": "^16.9.5",
+    "@types/socket.io": "^2.1.4",
+    "@types/socket.io-client": "^1.4.32",
+    "concurrently": "^5.1.0",
+    "nodemon": "^2.0.2",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "source-map-loader": "^0.2.4",
+    "ts-loader": "^6.2.1",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
+  }
+}
