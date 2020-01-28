@@ -22,6 +22,7 @@
   "homepage": "https://github.com/901david/docker-dashboard#readme",
   "dependencies": {
     "@types/morgan": "^1.7.37",
+    "@types/styled-components": "^4.4.2",
     "classnames": "^2.2.6",
     "dockerode": "^3.0.2",
     "express": "^4.17.1",
@@ -29,6 +30,7 @@
     "react-use-mapped-state": "^2.0.3",
     "socket.io": "^2.3.0",
     "stream": "0.0.2",
+    "styled-components": "^5.0.0",
     "typescript": "^3.7.5"
   },
   "devDependencies": {

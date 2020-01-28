@@ -2,6 +2,7 @@ import * as React from "react";
 import * as classNames from "classnames";
 import * as io from "socket.io-client";
 import { useMappedState } from "react-use-mapped-state";
+import SearchIcon from "./SearchIcon";
 
 const socket = io.connect();
 
@@ -226,9 +227,14 @@ export const ContainerListItem: React.FC<Container> = ({
           Command: <span>{command}</span>
         </div>
       </div>
-      {isStreaming && (
-        <div className="col-sm-12">
-          <div className="panel-heading">Logs</div>
+      {logStreams.length > 0 && (
+        <div
+          className={`${isLarge ? "col-sm-12" : "col-sm-6"} give-transition`}
+        >
+          <div className="panel-heading">
+            <p>Logs</p>
+            <SearchIcon searchClickHandler={data => console.log(data)} />
+          </div>
           <div ref={logRef} style={logStyles} className="panel-body">
             {logStreams.map((log: string, index: number) => {
               return <p key={index}>{log}</p>;
