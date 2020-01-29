@@ -256,8 +256,11 @@ export const ContainerListItem: React.FC<Container> = ({
       </div>
 
       <div>
-        <div className="panel-heading">
-          <span>Logs</span>
+        <div
+          style={{ display: "flex", alignItems: "center" }}
+          className="panel-heading"
+        >
+          <h3 style={{ marginRight: "5px" }}>Logs</h3>
           <SearchIcon
             disabled={logStreams.length === 0}
             handleTextChange={handleTextChange}

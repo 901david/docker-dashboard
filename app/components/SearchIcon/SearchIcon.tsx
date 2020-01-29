@@ -75,13 +75,13 @@ const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
     height: 0px;
   }
   #search-input:checked + #search-icon-label .magnify-glass {
-    width: 50rem;
+    width: 46rem;
     height: 4rem;
     border-radius: 3px;
   }
   #search-input:checked + #search-icon-label .text-input {
     visibility: visible;
-    width: 98%;
+    width: 95%;
     height: 100%;
     opacity: 1;
   }
