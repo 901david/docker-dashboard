@@ -36,16 +36,22 @@ export interface Container {
 
 interface IContainerListItemInitialState {
   logStreams: Array<string>;
+  logsShown: Array<string>;
   isStreaming: boolean;
   isLarge: boolean;
   copySuccess: boolean;
+  inputText: string;
+  isFiltered: boolean;
 }
 
 const ContainerListItemInitialState: IContainerListItemInitialState = {
   logStreams: [],
+  logsShown: [],
   isStreaming: false,
   isLarge: false,
-  copySuccess: false
+  copySuccess: false,
+  inputText: "",
+  isFiltered: false
 };
 
 export const ContainerListItem: React.FC<Container> = ({
@@ -60,7 +66,15 @@ export const ContainerListItem: React.FC<Container> = ({
   command
 }) => {
   const [
-    { logStreams, isStreaming, isLarge, copySuccess },
+    {
+      logStreams,
+      logsShown,
+      isFiltered,
+      isStreaming,
+      isLarge,
+      copySuccess,
+      inputText
+    },
     valueSetter
   ] = useMappedState(ContainerListItemInitialState);
 
@@ -93,16 +107,16 @@ export const ContainerListItem: React.FC<Container> = ({
   };
 
   const panelClass = isRunning ? "success" : "default";
-  const classes = classNames("panel", `panel-${panelClass}`);
+  const classes = classNames("panel", `panel-${panelClass}`, "no-scroll");
   const buttonText = isRunning ? "Stop" : "Start";
 
   React.useEffect(() => {
     socket.on(
-      "container.return_piped_logs",
-      (logStreams: { results: Array<string> }, err: any) => {
+      `container.return_piped_logs.${id}`,
+      (logStreamsNew: { results: Array<string> }, err: any) => {
         if (err) throw err;
-        if (logStreams.results) {
-          valueSetter("logStreams", logStreams.results);
+        if (logStreamsNew.results) {
+          valueSetter("logStreams", logStreams.concat(logStreamsNew.results));
         }
       }
     );
@@ -127,6 +141,15 @@ export const ContainerListItem: React.FC<Container> = ({
     updateLogScroll();
   }, [logStreams]);
 
+  const reg = new RegExp(`${inputText}`, "g");
+
+  const dataToUse =
+    inputText.length !== 0
+      ? logStreams.filter((stream: string) =>
+          stream.match(reg) ? stream.match(reg).length > 0 : false
+        )
+      : logStreams;
+
   const changeSize = (isLarge: boolean) => {
     valueSetter("isLarge", !isLarge);
   };
@@ -144,12 +167,16 @@ export const ContainerListItem: React.FC<Container> = ({
     }
   };
 
+  const handleTextChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    valueSetter("inputText", evt.target.value);
+  };
+
   return (
-    <>
-      <div
-        style={{ transition: "all 1s", height: "300px", overflow: "auto" }}
-        className={`${isLarge ? "col-sm-12" : "col-sm-6"} give-transition`}
-      >
+    <div
+      style={{ border: "3px solid black", paddingTop: "10px;" }}
+      className={`${isLarge ? "col-sm-12" : "col-sm-6"} give-transition`}
+    >
+      <div style={{ transition: "all 1s", height: "300px", overflow: "auto" }}>
         <div className={classes}>
           <div className="panel-heading">{name}</div>
           <div className="panel-footer">
@@ -227,21 +254,24 @@ export const ContainerListItem: React.FC<Container> = ({
           Command: <span>{command}</span>
         </div>
       </div>
-      {logStreams.length > 0 && (
-        <div
-          className={`${isLarge ? "col-sm-12" : "col-sm-6"} give-transition`}
-        >
-          <div className="panel-heading">
-            <p>Logs</p>
-            <SearchIcon searchClickHandler={data => console.log(data)} />
-          </div>
-          <div ref={logRef} style={logStyles} className="panel-body">
-            {logStreams.map((log: string, index: number) => {
-              return <p key={index}>{log}</p>;
-            })}
-          </div>
+
+      <div>
+        <div className="panel-heading">
+          <span>Logs</span>
+          <SearchIcon
+            disabled={logStreams.length === 0}
+            handleTextChange={handleTextChange}
+            inputText={inputText}
+            searchClickHandler={data => console.log(data)}
+          />
         </div>
-      )}
-    </>
+        <div ref={logRef} style={logStyles} className="panel-body">
+          {dataToUse.length === 0 && <h1>No logs to show currently</h1>}
+          {dataToUse.map((log: string, index: number) => {
+            return <p key={index}>{log}</p>;
+          })}
+        </div>
+      </div>
+    </div>
   );
 };

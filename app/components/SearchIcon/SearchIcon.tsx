@@ -7,13 +7,16 @@ interface SearchBarIconWrapperProps {
   magnifyGlassBackground: string;
   magnifyGlassHandleColor: string;
   magnifyGlassBorderColor: string;
+  disabled: boolean;
 }
 
 const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
   position: relative;
+
   #search-input {
     display: none;
   }
+
   .text-input {
     visibility: hidden;
     width: 0px;
@@ -21,6 +24,7 @@ const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
     transition: all 0.5s;
     padding-top: 2.25px;
   }
+
   .text-input:focus,
   .text-input:active,
   .text-input:inactive {
@@ -48,7 +52,8 @@ const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
     height: 2rem;
     border-radius: 50%;
     border: 0.2rem solid
-      ${({ magnifyGlassBorderColor }) => magnifyGlassBorderColor};
+      ${({ magnifyGlassBorderColor, disabled }) =>
+        !disabled ? magnifyGlassBorderColor : "#999"};
     transition: all 0.5s;
   }
   .magnify-glass-handle {
@@ -57,7 +62,8 @@ const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
     position: absolute;
     top: 2.5rem;
     left: 1.6rem;
-    background: ${({ magnifyGlassHandleColor }) => magnifyGlassHandleColor};
+    background: ${({ magnifyGlassHandleColor, disabled }) =>
+      !disabled ? magnifyGlassHandleColor : "#999"};
     width: 2rem;
     height: 2px;
     transform: rotate(45deg);
@@ -69,14 +75,14 @@ const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
     height: 0px;
   }
   #search-input:checked + #search-icon-label .magnify-glass {
-    width: 18rem;
-    height: 2rem;
+    width: 50rem;
+    height: 4rem;
     border-radius: 3px;
   }
   #search-input:checked + #search-icon-label .text-input {
     visibility: visible;
-    width: 85%;
-    margin: 0px 0.5%;
+    width: 98%;
+    height: 100%;
     opacity: 1;
   }
   #search-input:checked + #search-icon-label .close-icon-left {
@@ -85,6 +91,7 @@ const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
     right: 1rem;
     visibility: visible;
     opacity: 1;
+    margin-left: 5px;
     transform: rotate(45deg);
   }
   #search-input:checked + #search-icon-label .close-icon-right {
@@ -102,36 +109,22 @@ interface SearchBarIconBaseProps {
   magnifyGlassHandleColor?: string;
   magnifyGlassBorderColor?: string;
   closeIconColor?: string;
+  inputText: string;
+  disabled: boolean;
+  handleTextChange: (evt: React.ChangeEvent<HTMLInputElement>) => void;
   searchClickHandler: (userInput: string) => void;
 }
 
 const SearchBarIcon: React.FC<SearchBarIconBaseProps> = props => {
-  const [
-    {
-      inputText,
-      magnifyGlassBackground,
-      magnifyGlassHandleColor,
-      magnifyGlassBorderColor,
-      closeIconColor
-    },
-    valueSetter
-  ] = useMappedState({
-    magnifyGlassBackground: props.magnifyGlassBackground || "white",
-    magnifyGlassHandleColor: props.magnifyGlassHandleColor || "black",
-    magnifyGlassBorderColor: props.magnifyGlassBorderColor || "black",
-    closeIconColor: props.closeIconColor || "black",
-    inputText: ""
-  });
-  const enterPressHandler = (evt: any) => {
-    if (evt.charCode === 13 && inputText.length > 0) {
-      props.searchClickHandler(inputText);
-      valueSetter("inputText", "");
-    }
-  };
+  const magnifyGlassBackground = props.magnifyGlassBackground || "white";
+  const magnifyGlassHandleColor = props.magnifyGlassHandleColor || "black";
+  const magnifyGlassBorderColor = props.magnifyGlassBorderColor || "black";
+  const closeIconColor = props.closeIconColor || "black";
 
-  const handleChange = (evt: any) => {
-    const { value: inputText } = evt.target;
-    valueSetter("inputText", inputText);
+  const enterPressHandler = (evt: any) => {
+    if (evt.charCode === 13 && props.inputText.length > 0) {
+      props.searchClickHandler(props.inputText);
+    }
   };
 
   React.useEffect(() => {
@@ -143,19 +136,26 @@ const SearchBarIcon: React.FC<SearchBarIconBaseProps> = props => {
 
   return (
     <SearchBarIconWrapper
+      disabled={props.disabled}
       magnifyGlassBackground={magnifyGlassBackground}
       magnifyGlassHandleColor={magnifyGlassHandleColor}
       magnifyGlassBorderColor={magnifyGlassBorderColor}
       closeIconColor={closeIconColor}
     >
-      <div className={`search-container`}>
+      <div
+        title={props.disabled && "Cannot search when no logs are present"}
+        className={`search-container`}
+      >
         <input type="checkbox" name="search-input" id="search-input" />
-        <label htmlFor="search-input" id="search-icon-label">
+        <label
+          htmlFor={!props.disabled ? "search-input" : ""}
+          id="search-icon-label"
+        >
           <span className="magnify-glass">
             <input
               className="text-input"
-              onChange={handleChange}
-              value={inputText}
+              onChange={props.handleTextChange}
+              value={props.inputText}
             />
             <span className="close-icon-left">&nbsp;</span>
             <span className="close-icon-right">&nbsp;</span>

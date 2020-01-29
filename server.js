@@ -54,7 +54,7 @@ io.on("connection", socket => {
       logStream.on("data", chunk => {
         results.push(chunk.toString("utf8"));
         if (results.length > 100) {
-          io.emit("container.return_piped_logs", { results });
+          socket.emit(`container.return_piped_logs.${args.id}`, { results });
           results = [];
         }
       });
@@ -72,7 +72,7 @@ io.on("connection", socket => {
           container.modem.demuxStream(stream, logStream, logStream);
           stream.on("end", () => {
             logStream.end("!stop!");
-            io.emit("container.return_piped_logs", { results });
+            socket.emit(`container.return_piped_logs.${args.id}`, { results });
           });
         }
       );
