@@ -36,22 +36,18 @@ export interface Container {
 
 interface IContainerListItemInitialState {
   logStreams: Array<string>;
-  logsShown: Array<string>;
   isStreaming: boolean;
   isLarge: boolean;
   copySuccess: boolean;
   inputText: string;
-  isFiltered: boolean;
 }
 
 const ContainerListItemInitialState: IContainerListItemInitialState = {
   logStreams: [],
-  logsShown: [],
   isStreaming: false,
   isLarge: false,
   copySuccess: false,
-  inputText: "",
-  isFiltered: false
+  inputText: ""
 };
 
 export const ContainerListItem: React.FC<Container> = ({
@@ -66,15 +62,7 @@ export const ContainerListItem: React.FC<Container> = ({
   command
 }) => {
   const [
-    {
-      logStreams,
-      logsShown,
-      isFiltered,
-      isStreaming,
-      isLarge,
-      copySuccess,
-      inputText
-    },
+    { logStreams, isStreaming, isLarge, copySuccess, inputText },
     valueSetter
   ] = useMappedState(ContainerListItemInitialState);
 
@@ -194,9 +182,11 @@ export const ContainerListItem: React.FC<Container> = ({
                 Stop Streaming Logs
               </button>
             )}
-            <button onClick={onRemoveContainer} className="btn btn-default">
-              Remove
-            </button>
+            {!isRunning && (
+              <button onClick={onRemoveContainer} className="btn btn-default">
+                Remove
+              </button>
+            )}
             <button
               onClick={() => changeSize(isLarge)}
               className="btn btn-default"

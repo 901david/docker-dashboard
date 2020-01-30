@@ -11,9 +11,9 @@ const PORT = process.env.PORT || 3002;
 
 const openLogStreams = new Map();
 app.use(morgan("dev"));
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get("*", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
 server.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 
@@ -110,4 +110,4 @@ io.on("connection", socket => {
   });
 });
 
-setInterval(refreshContainers, 1000);
+// setInterval(refreshContainers, 1000);
