@@ -2,9 +2,27 @@ import * as React from "react";
 import * as classNames from "classnames";
 import * as io from "socket.io-client";
 import { useMappedState } from "react-use-mapped-state";
+import styled from "styled-components";
+
 import SearchIcon from "./SearchIcon";
 
 const socket = io.connect();
+
+interface IContainerListItemWrapperProps {
+  isLarge: boolean;
+}
+
+const ContainerListItemWrapper = styled.div<IContainerListItemWrapperProps>`
+  border: 3px solid #666;
+  box-shadow: 5px 5px 8px rgba(102, 102, 102, 0.3);
+  border-radius: 10px;
+  margin: 25px;
+  padding-top: 10px;
+  padding: 25px;
+  overflow: auto;
+  transition: all 0.75s;
+  ${({ isLarge }) => isLarge && "grid-column: 1 / -1"};
+`;
 
 interface Mount {
   Type: string;
@@ -121,8 +139,7 @@ export const ContainerListItem: React.FC<Container> = ({
   }, []);
 
   const logStyles = {
-    overflow: "scroll",
-    height: "300px"
+    overflow: "scroll"
   };
 
   React.useEffect(() => {
@@ -160,10 +177,7 @@ export const ContainerListItem: React.FC<Container> = ({
   };
 
   return (
-    <div
-      style={{ border: "3px solid black", paddingTop: "10px;" }}
-      className={`${isLarge ? "col-sm-12" : "col-sm-6"} give-transition`}
-    >
+    <ContainerListItemWrapper isLarge={isLarge} className="give-transition">
       <div style={{ transition: "all 1s", height: "300px", overflow: "auto" }}>
         <div className={classes}>
           <div className="panel-heading">{name}</div>
@@ -265,6 +279,6 @@ export const ContainerListItem: React.FC<Container> = ({
           })}
         </div>
       </div>
-    </div>
+    </ContainerListItemWrapper>
   );
 };

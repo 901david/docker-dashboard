@@ -76,10 +76,10 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
   return (
     <div>
-      <DropdownHeader title={"Running"}>
+      <DropdownHeader title={"Running Containers"}>
         <ContainerList containers={containers} />
       </DropdownHeader>
-      <DropdownHeader title={"Stopped containers"}>
+      <DropdownHeader title={"Stopped Containers"}>
         <ContainerList containers={stoppedContainers} />
       </DropdownHeader>
     </div>

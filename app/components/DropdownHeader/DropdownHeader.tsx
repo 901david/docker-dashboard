@@ -11,20 +11,27 @@ const MainContainer = styled.div`
   }
 `;
 
-const HeaderContainer = styled.div`
+interface IHeaderContainerProps {
+  isOpen: boolean;
+}
+
+const HeaderContainer = styled.div<IHeaderContainerProps>`
   display: flex;
   align-items: center;
 
   svg {
     margin-left: 10px;
     font-size: 45px;
+    transition: all 0.3s;
+    transform: rotate(0);
+    ${({ isOpen }) => isOpen && "transform: rotate(-180deg)"}
   }
 `;
 
 const ContainerListContainer = styled.div`
   height: 0;
   transition: all 0.5s;
-  overflow: hidden;
+  overflow: auto;
 `;
 
 interface DropdownHeaderProps {
@@ -45,18 +52,15 @@ const DropdownHeader: React.FC<DropdownHeaderProps> = ({ title, children }) => {
   const [{ isOpen }, valueSetter] = useMappedState(initialDropdownHeaderState);
 
   const handleArrowClick = (): void => {
-    containerListRef.current.style.height = isOpen ? "0" : "50vh";
+    containerListRef.current.style.height = isOpen ? "0" : "70rem";
     valueSetter("isOpen", !isOpen);
   };
 
   return (
     <MainContainer>
-      <HeaderContainer>
+      <HeaderContainer isOpen={isOpen}>
         <h1>{title}</h1>
-        <FontAwesomeIcon
-          onClick={handleArrowClick}
-          icon={!isOpen ? faChevronDown : faChevronUp}
-        />
+        <FontAwesomeIcon onClick={handleArrowClick} icon={faChevronDown} />
       </HeaderContainer>
       <ContainerListContainer ref={containerListRef}>
         {children}
