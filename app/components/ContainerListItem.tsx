@@ -5,6 +5,9 @@ import { useMappedState } from "react-use-mapped-state";
 import styled from "styled-components";
 
 import SearchIcon from "./SearchIcon";
+import StartStopIcon from "./StartStop";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faExpandAlt } from "@fortawesome/free-solid-svg-icons";
 
 const socket = io.connect();
 
@@ -17,11 +20,35 @@ const ContainerListItemWrapper = styled.div<IContainerListItemWrapperProps>`
   box-shadow: 5px 5px 8px rgba(102, 102, 102, 0.3);
   border-radius: 10px;
   margin: 25px;
-  padding-top: 10px;
-  padding: 25px;
   overflow: auto;
   transition: all 0.75s;
   ${({ isLarge }) => isLarge && "grid-column: 1 / -1"};
+`;
+
+interface IContainerHeaderProps {
+  bgColor?: string;
+}
+
+const ContainerHeader = styled.div<IContainerHeaderProps>`
+  background: rgb(${({ bgColor }) => bgColor || "102,102,102"});
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+
+  > svg {
+    font-size: 35px;
+    justify-self: flex-end;
+    margin-right: 5px;
+  }
+
+  > span {
+    margin-left: 5px;
+  }
+`;
+
+const ContainerHeaderWrapper = styled.div`
+  border-radius: 10px;
+  border: 2px solid #f5f5f5;
 `;
 
 interface Mount {
@@ -112,10 +139,6 @@ export const ContainerListItem: React.FC<Container> = ({
     socket.emit("container.remove", { id });
   };
 
-  const panelClass = isRunning ? "success" : "default";
-  const classes = classNames("panel", `panel-${panelClass}`, "no-scroll");
-  const buttonText = isRunning ? "Stop" : "Start";
-
   React.useEffect(() => {
     socket.on(
       `container.return_piped_logs.${id}`,
@@ -179,12 +202,19 @@ export const ContainerListItem: React.FC<Container> = ({
   return (
     <ContainerListItemWrapper isLarge={isLarge} className="give-transition">
       <div style={{ transition: "all 1s", height: "300px", overflow: "auto" }}>
-        <div className={classes}>
-          <div className="panel-heading">{name}</div>
-          <div className="panel-footer">
-            <button onClick={onActionButtonClick} className="btn btn-default">
-              {buttonText}
-            </button>
+        <ContainerHeaderWrapper>
+          <ContainerHeader bgColor={isRunning ? "45,201,55" : "204,50,50"}>
+            <span>{name}</span>
+            <StartStopIcon
+              handleAction={onActionButtonClick}
+              type={isRunning ? "stop" : "start"}
+            />
+            <FontAwesomeIcon
+              onClick={() => changeSize(isLarge)}
+              icon={faExpandAlt}
+            />
+          </ContainerHeader>
+          <ContainerHeader>
             {!isStreaming && (
               <button onClick={onPipeLogs} className="btn btn-default">
                 Start Streaming Logs
@@ -201,15 +231,9 @@ export const ContainerListItem: React.FC<Container> = ({
                 Remove
               </button>
             )}
-            <button
-              onClick={() => changeSize(isLarge)}
-              className="btn btn-default"
-            >
-              {isLarge ? "Shrink" : "Expand"}
-            </button>
-          </div>
-        </div>
-        <div className="panel-body">
+          </ContainerHeader>
+        </ContainerHeaderWrapper>
+        <div style={{ padding: "25px" }}>
           Id: <span title={id}>{id.slice(0, 16) + "..."}</span>{" "}
           {document.queryCommandSupported("copy") && (
             <div>
