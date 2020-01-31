@@ -1,13 +1,20 @@
 import * as React from "react";
-import * as classNames from "classnames";
+import * as _ from "lodash";
 import * as io from "socket.io-client";
 import { useMappedState } from "react-use-mapped-state";
 import styled from "styled-components";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faExpandAlt,
+  faPaste,
+  faCheckCircle,
+  faFolderPlus,
+  faFilter,
+  faTrashAlt
+} from "@fortawesome/free-solid-svg-icons";
 
 import SearchIcon from "./SearchIcon";
 import StartStopIcon from "./StartStop";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faExpandAlt } from "@fortawesome/free-solid-svg-icons";
 
 const socket = io.connect();
 
@@ -19,10 +26,40 @@ const ContainerListItemWrapper = styled.div<IContainerListItemWrapperProps>`
   border: 3px solid #666;
   box-shadow: 5px 5px 8px rgba(102, 102, 102, 0.3);
   border-radius: 10px;
-  margin: 25px;
+  margin: 15px;
   overflow: auto;
   transition: all 0.75s;
   ${({ isLarge }) => isLarge && "grid-column: 1 / -1"};
+`;
+
+interface ILogsHeaderWrapperProps {
+  filtersDisabled: boolean;
+}
+
+const LogsHeaderWrapper = styled.div<ILogsHeaderWrapperProps>`
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+
+  svg {
+    font-size: 25px;
+  }
+
+  .stream-logs-on {
+    color: rgb(45, 201, 55);
+    cursor: pointer;
+  }
+
+  .stream-logs-off {
+    color: rgb(204, 50, 50);
+    cursor: pointer;
+  }
+
+  .open-filter {
+    cursor: ${({ filtersDisabled }) =>
+      filtersDisabled ? "not-allowed" : "pointer"};
+    color: ${({ filtersDisabled }) => (filtersDisabled ? "#999" : "black")};
+  }
 `;
 
 interface IContainerHeaderProps {
@@ -31,8 +68,9 @@ interface IContainerHeaderProps {
 
 const ContainerHeader = styled.div<IContainerHeaderProps>`
   background: rgb(${({ bgColor }) => bgColor || "102,102,102"});
-  min-height: 50px;
+  min-height: 100px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
 
   > svg {
@@ -49,6 +87,30 @@ const ContainerHeader = styled.div<IContainerHeaderProps>`
 const ContainerHeaderWrapper = styled.div`
   border-radius: 10px;
   border: 2px solid #f5f5f5;
+
+  .expand-card {
+    margin-right: 15px;
+  }
+
+  .remove-container {
+    width: 33px;
+    height: 33px;
+  }
+`;
+
+const ContainerIdWrapper = styled.div`
+  display: flex;
+
+  .success-icon {
+    opacity: 0;
+    transition: all 1s;
+    color: #4bb543;
+    margin-left: 3px;
+  }
+
+  .clipboard-icon {
+    margin-left: 3px;
+  }
 `;
 
 interface Mount {
@@ -83,17 +145,52 @@ interface IContainerListItemInitialState {
   logStreams: Array<string>;
   isStreaming: boolean;
   isLarge: boolean;
-  copySuccess: boolean;
   inputText: string;
+  filterTriggeredByIcon: boolean;
 }
 
 const ContainerListItemInitialState: IContainerListItemInitialState = {
   logStreams: [],
   isStreaming: false,
   isLarge: false,
-  copySuccess: false,
-  inputText: ""
+  inputText: "",
+  filterTriggeredByIcon: false
 };
+
+const SubHeaderWrapper = styled.div`
+  display: flex;
+  color: white;
+  align-items: center;
+  margin: 2px;
+  margin-left: 15px;
+`;
+
+const HiddenInput = styled.input`
+  display: none;
+  position: absolute;
+  left: -3000px;
+`;
+
+interface IContainerStatusProps {
+  isRunning: boolean;
+}
+
+const ContainerStatus = styled.p<IContainerStatusProps>`
+  background: rgb(
+    ${({ isRunning }) => (isRunning ? "45,201,55" : "204,50,50")}
+  );
+  color: ${({ isRunning }) => (isRunning ? "black" : "white")};
+  padding: 2px;
+  border-radius: 5px;
+`;
+
+const MountsWrapper = styled.div`
+  margin-left: 25px;
+`;
+
+const PortsWrapper = styled.div`
+  margin-left: 25px;
+`;
 
 export const ContainerListItem: React.FC<Container> = ({
   id,
@@ -107,12 +204,13 @@ export const ContainerListItem: React.FC<Container> = ({
   command
 }) => {
   const [
-    { logStreams, isStreaming, isLarge, copySuccess, inputText },
+    { logStreams, isStreaming, isLarge, inputText, filterTriggeredByIcon },
     valueSetter
   ] = useMappedState(ContainerListItemInitialState);
 
   const logRef: React.RefObject<HTMLDivElement> = React.createRef();
   const idRef: React.RefObject<HTMLInputElement> = React.createRef();
+  const copySuccessRef: React.RefObject<HTMLSpanElement> = React.createRef();
   const isRunning = state === "running";
 
   const onActionButtonClick = () => {
@@ -182,15 +280,18 @@ export const ContainerListItem: React.FC<Container> = ({
     valueSetter("isLarge", !isLarge);
   };
 
-  const copyToClipboard = (ref: React.RefObject<HTMLInputElement>) => {
-    if (ref.current !== null) {
-      ref.current.style.display = "block";
-      ref.current.select();
+  const copyToClipboard = (
+    inputRef: React.RefObject<HTMLInputElement>,
+    copySuccessRef: React.RefObject<HTMLSpanElement>
+  ) => {
+    if (inputRef.current !== null && copySuccessRef.current !== null) {
+      inputRef.current.style.display = "block";
+      inputRef.current.select();
       document.execCommand("copy");
-      ref.current.style.display = "none";
-      valueSetter("copySuccess", true);
+      inputRef.current.style.display = "none";
+      copySuccessRef.current.style.opacity = "1";
       setTimeout(() => {
-        valueSetter("copySuccess", false);
+        copySuccessRef.current.style.opacity = "0";
       }, 2000);
     }
   };
@@ -198,98 +299,164 @@ export const ContainerListItem: React.FC<Container> = ({
   const handleTextChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     valueSetter("inputText", evt.target.value);
   };
+  console.log("logs length", logStreams.length);
 
+  const handleFilterClick = () => {
+    valueSetter("filterTriggeredByIcon", true);
+    setTimeout(() => {
+      valueSetter("filterTriggeredByIcon", false);
+    }, 1000);
+  };
   return (
     <ContainerListItemWrapper isLarge={isLarge} className="give-transition">
-      <div style={{ transition: "all 1s", height: "300px", overflow: "auto" }}>
-        <ContainerHeaderWrapper>
-          <ContainerHeader bgColor={isRunning ? "45,201,55" : "204,50,50"}>
+      <ContainerHeaderWrapper>
+        <ContainerHeader>
+          <SubHeaderWrapper>
             <span>{name}</span>
             <StartStopIcon
               handleAction={onActionButtonClick}
               type={isRunning ? "stop" : "start"}
             />
-            <FontAwesomeIcon
-              onClick={() => changeSize(isLarge)}
-              icon={faExpandAlt}
-            />
-          </ContainerHeader>
-          <ContainerHeader>
-            {!isStreaming && (
-              <button onClick={onPipeLogs} className="btn btn-default">
-                Start Streaming Logs
-              </button>
-            )}
-
-            {isStreaming && (
-              <button onClick={onStopPipeLogs} className="btn btn-default">
-                Stop Streaming Logs
-              </button>
-            )}
             {!isRunning && (
-              <button onClick={onRemoveContainer} className="btn btn-default">
-                Remove
-              </button>
-            )}
-          </ContainerHeader>
-        </ContainerHeaderWrapper>
-        <div style={{ padding: "25px" }}>
-          Id: <span title={id}>{id.slice(0, 16) + "..."}</span>{" "}
-          {document.queryCommandSupported("copy") && (
-            <div>
-              <input
-                style={{
-                  display: "none",
-                  position: "absolute",
-                  left: "-3000px"
-                }}
-                ref={idRef}
-                type="text"
-                value={id}
+              <StartStopIcon
+                classToAdd="remove-container"
+                handleAction={onRemoveContainer}
+                type="stop"
+                icon={faTrashAlt}
               />
-              <button onClick={() => copyToClipboard(idRef)}>Copy</button>
-              {copySuccess && <span>Copied!</span>}
-            </div>
-          )}
-          <br />
-          Status: {status}
-          <br />
-          Image: {image}
-          <br />
-          Volumes: <span>{volumes.join(", ")}</span>
-          <br />
-          Mounts:{" "}
-          {mounts.map(
-            ({ Type, Source, Destination, Mode, RW, Propagation }) => (
-              <>
-                <p>Type: {Type}</p>
-                <p>Source: {Source}</p>
-                <p>Destination: {Destination}</p>
-                <p>Mode: {Mode}</p>
-                <p>RW: {RW}</p>
-                <p>Propagation: {Propagation}</p>
-              </>
-            )
-          )}
-          <br />
-          Ports:{" "}
-          {ports.map((portObj: Port) => {
-            return Object.keys(portObj).map((portData: keyof Port) => {
-              return <span style={{ margin: "3px" }}>{portData}</span>;
-            });
-          })}
-          <br />
-          Command: <span>{command}</span>
+            )}
+          </SubHeaderWrapper>
+          <FontAwesomeIcon
+            className="expand-card"
+            onClick={() => changeSize(isLarge)}
+            icon={faExpandAlt}
+          />
+        </ContainerHeader>
+      </ContainerHeaderWrapper>
+      <div style={{ transition: "all 1s", height: "300px", overflow: "auto" }}>
+        <div style={{ padding: "25px" }}>
+          <ContainerStatus isRunning={isRunning}>
+            <strong>Status:</strong> {status || "N/A"}
+          </ContainerStatus>
+          <ContainerIdWrapper>
+            <p>
+              <strong>Id:</strong>
+            </p>{" "}
+            <span title={id}>{id.slice(0, 20) + "..."}</span>
+            {document.queryCommandSupported("copy") && (
+              <div>
+                <HiddenInput ref={idRef} type="text" value={id} />
+                <span
+                  className="clipboard-icon"
+                  onClick={() => copyToClipboard(idRef, copySuccessRef)}
+                >
+                  <FontAwesomeIcon title="Copy to Clipboard" icon={faPaste} />
+                </span>
+                <span className="success-icon" ref={copySuccessRef}>
+                  <FontAwesomeIcon title="Success" icon={faCheckCircle} />
+                </span>
+              </div>
+            )}
+          </ContainerIdWrapper>
+          <p>
+            <strong>Image:</strong> {image}
+          </p>
+          <p>
+            <strong>Volumes:</strong>
+            <span>{volumes.length > 0 ? volumes.join(", ") : "N/A"}</span>
+          </p>
+          <span>
+            <p>
+              <strong>Mounts:</strong>
+            </p>
+            <MountsWrapper>
+              {mounts.length > 0
+                ? mounts.map(
+                    ({ Type, Source, Destination, Mode, RW, Propagation }) => (
+                      <>
+                        <p>
+                          <strong>Type:</strong> {Type}
+                        </p>
+                        <p>
+                          <strong>Source:</strong> {Source}
+                        </p>
+                        <p>
+                          <strong>Destination:</strong> {Destination}
+                        </p>
+                        <p>
+                          <strong>Mode:</strong> {Mode}
+                        </p>
+                        <p>
+                          <strong>RW:</strong> {RW}
+                        </p>
+                        <p>
+                          <strong>Propagation:</strong> {Propagation}
+                        </p>
+                      </>
+                    )
+                  )
+                : "  N/A"}
+            </MountsWrapper>
+          </span>
+          <span>
+            <p>
+              <strong>Ports:</strong>
+            </p>
+            <PortsWrapper>
+              {ports.length > 0
+                ? ports.map((portObj: Port) => {
+                    return Object.keys(portObj).map((portData: keyof Port) => {
+                      return <span style={{ margin: "3px" }}>{portData}</span>;
+                    });
+                  })
+                : "  N/A"}
+            </PortsWrapper>
+          </span>
+          <span>
+            <p>
+              <strong>Command:</strong>
+            </p>
+            <span>{command || "N/A"}</span>
+          </span>
         </div>
       </div>
 
       <div>
-        <div
-          style={{ display: "flex", alignItems: "center" }}
-          className="panel-heading"
-        >
-          <h3 style={{ marginRight: "5px" }}>Logs</h3>
+        <div>
+          <LogsHeaderWrapper filtersDisabled={logStreams.length === 0}>
+            <h4>Logs</h4>
+            {!isStreaming && (
+              <span onClick={onPipeLogs} className="stream-logs-on">
+                <FontAwesomeIcon
+                  title="Start Streaming Logs"
+                  icon={faFolderPlus}
+                />
+              </span>
+            )}
+            {isStreaming && (
+              <span onClick={onStopPipeLogs} className="stream-logs-off">
+                <FontAwesomeIcon
+                  title="Stop Streaming Logs"
+                  icon={faFolderPlus}
+                />
+              </span>
+            )}
+            <span onClick={handleFilterClick} className="open-filter">
+              <FontAwesomeIcon
+                title={
+                  logStreams.length !== 0
+                    ? "Filter Logs"
+                    : "No Logs to Filter, Start Streaming first"
+                }
+                icon={faFilter}
+              />
+            </span>
+            {/* TODO:  Clear filters button and a X for remove logs */}
+          </LogsHeaderWrapper>
           <SearchIcon
+            isLarge={isLarge}
+            uniqueId={_.uniqueId("container-")}
+            manualTrigger={filterTriggeredByIcon}
             disabled={logStreams.length === 0}
             handleTextChange={handleTextChange}
             inputText={inputText}

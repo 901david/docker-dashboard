@@ -1,11 +1,16 @@
 import * as React from "react";
 import styled from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrafficLight } from "@fortawesome/free-solid-svg-icons";
+import {
+  faTrafficLight,
+  IconDefinition
+} from "@fortawesome/free-solid-svg-icons";
 
 interface IStartStopIconProps {
   type: "start" | "stop";
   handleAction: () => void;
+  icon?: IconDefinition;
+  classToAdd?: string;
 }
 
 const Background = styled.div<{ type: "start" | "stop" }>`
@@ -29,13 +34,19 @@ const Background = styled.div<{ type: "start" | "stop" }>`
 
 const StartStopIcon: React.FC<IStartStopIconProps> = ({
   type,
-  handleAction
+  handleAction,
+  icon,
+  classToAdd
 }) => {
   const title = type === "start" ? "Start Container" : "Stop Container";
 
   return (
-    <Background onClick={handleAction} type={type}>
-      <FontAwesomeIcon title={title} icon={faTrafficLight} />
+    <Background
+      className={classToAdd ? classToAdd : ""}
+      onClick={handleAction}
+      type={type}
+    >
+      <FontAwesomeIcon title={title} icon={icon ? icon : faTrafficLight} />
     </Background>
   );
 };

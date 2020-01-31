@@ -1,6 +1,5 @@
 import * as React from "react";
-import styled from "styled-components";
-import { useMappedState } from "react-use-mapped-state";
+import styled, { css } from "styled-components";
 
 interface SearchBarIconWrapperProps {
   closeIconColor: string;
@@ -8,14 +7,18 @@ interface SearchBarIconWrapperProps {
   magnifyGlassHandleColor: string;
   magnifyGlassBorderColor: string;
   disabled: boolean;
+  uniqueId: string;
+  isLarge: boolean;
 }
 
 const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
   position: relative;
+  margin-left: 15px;
 
-  #search-input {
-    display: none;
-  }
+  ${({ uniqueId }) => `#${uniqueId}-search-input {
+      display: none;
+    }
+  `}
 
   .text-input {
     visibility: hidden;
@@ -60,8 +63,8 @@ const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
     display: block;
     opacity: 1;
     position: absolute;
-    top: 2.5rem;
-    left: 1.6rem;
+    top: 2.4rem;
+    left: 1.4rem;
     background: ${({ magnifyGlassHandleColor, disabled }) =>
       !disabled ? magnifyGlassHandleColor : "#999"};
     width: 2rem;
@@ -69,35 +72,48 @@ const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
     transform: rotate(45deg);
     transition: all 0.2s cubic-bezier(0, 0.93, 0, 0.18);
   }
-  #search-input:checked + #search-icon-label .magnify-glass-handle {
+  ${({ uniqueId }) =>
+    `#${uniqueId}-search-input`}:checked + #search-icon-label .magnify-glass-handle {
     visibility: hidden;
     opacity: 0;
     height: 0px;
   }
-  #search-input:checked + #search-icon-label .magnify-glass {
-    width: 46rem;
+  ${({ uniqueId }) =>
+    `#${uniqueId}-search-input`}:checked + #search-icon-label .magnify-glass {
+    width: ${({ isLarge }) =>
+      isLarge
+        ? css`
+            ${window.innerWidth - 123}px
+          `
+        : css`
+            ${window.innerWidth / 3 - 123 / 3}px
+          `};
     height: 4rem;
     border-radius: 3px;
   }
-  #search-input:checked + #search-icon-label .text-input {
+  ${({ uniqueId }) =>
+    `#${uniqueId}-search-input`}:checked + #search-icon-label .text-input {
     visibility: visible;
-    width: 95%;
+    width: ${({ isLarge }) =>
+      isLarge ? `calc(${window.innerWidth} - "5rem")` : "25.5rem"};
     height: 100%;
     opacity: 1;
   }
-  #search-input:checked + #search-icon-label .close-icon-left {
+  ${({ uniqueId }) =>
+    `#${uniqueId}-search-input`}:checked + #search-icon-label .close-icon-left {
     position: absolute;
     top: 0.5rem;
-    right: 1rem;
+    right: ${({ isLarge }) => (isLarge ? "3rem" : "4.3rem")};
     visibility: visible;
     opacity: 1;
     margin-left: 5px;
     transform: rotate(45deg);
   }
-  #search-input:checked + #search-icon-label .close-icon-right {
+  ${({ uniqueId }) =>
+    `#${uniqueId}-search-input`}:checked + #search-icon-label .close-icon-right {
     position: absolute;
     top: 0.5rem;
-    right: 1rem;
+    right: ${({ isLarge }) => (isLarge ? "3rem" : "4.3rem")};
     visibility: visible;
     opacity: 1;
     transform: rotate(-45deg);
@@ -113,9 +129,13 @@ interface SearchBarIconBaseProps {
   disabled: boolean;
   handleTextChange: (evt: React.ChangeEvent<HTMLInputElement>) => void;
   searchClickHandler: (userInput: string) => void;
+  manualTrigger?: boolean;
+  uniqueId: string;
+  isLarge: boolean;
 }
 
 const SearchBarIcon: React.FC<SearchBarIconBaseProps> = props => {
+  const magnifyLabelRef: React.RefObject<HTMLLabelElement> = React.createRef();
   const magnifyGlassBackground = props.magnifyGlassBackground || "white";
   const magnifyGlassHandleColor = props.magnifyGlassHandleColor || "black";
   const magnifyGlassBorderColor = props.magnifyGlassBorderColor || "black";
@@ -134,21 +154,35 @@ const SearchBarIcon: React.FC<SearchBarIconBaseProps> = props => {
     };
   });
 
+  React.useEffect(() => {
+    if (props.manualTrigger && magnifyLabelRef.current !== null)
+      magnifyLabelRef.current.click();
+  }, [props.manualTrigger]);
+
   return (
     <SearchBarIconWrapper
+      isLarge={props.isLarge}
       disabled={props.disabled}
       magnifyGlassBackground={magnifyGlassBackground}
       magnifyGlassHandleColor={magnifyGlassHandleColor}
       magnifyGlassBorderColor={magnifyGlassBorderColor}
       closeIconColor={closeIconColor}
+      uniqueId={props.uniqueId}
     >
       <div
         title={props.disabled && "Cannot search when no logs are present"}
         className={`search-container`}
       >
-        <input type="checkbox" name="search-input" id="search-input" />
+        <input
+          type="checkbox"
+          name="search-input"
+          id={
+            props.uniqueId ? `${props.uniqueId}-search-input` : "search-input-"
+          }
+        />
         <label
-          htmlFor={!props.disabled ? "search-input" : ""}
+          ref={magnifyLabelRef}
+          htmlFor={!props.disabled ? `${props.uniqueId}-search-input` : ""}
           id="search-icon-label"
         >
           <span className="magnify-glass">
