@@ -110,4 +110,4 @@ io.on("connection", socket => {
   });
 });
 
-// setInterval(refreshContainers, 1000);
+setInterval(refreshContainers, 2000);
