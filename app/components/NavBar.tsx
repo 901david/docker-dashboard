@@ -34,9 +34,9 @@ export interface NavOption {
 
 const navOptions: NavOptions = [
   { icon: null, title: "Dashboard", path: "/dashboard" },
-  { icon: null, title: "New Container", path: "#newContainerModal" },
-  { icon: null, title: "New Compose Cluster", path: "/new/compose/start" },
-  { icon: null, title: "New Compose File", path: "/new/compose/create" }
+  { icon: null, title: "New Container", path: "#newContainerModal" }
+  //   { icon: null, title: "New Compose Cluster", path: "/new/compose/start" },
+  //   { icon: null, title: "New Compose File", path: "/new/compose/create" }
 ];
 
 const NavBar: React.FC<{ location?: any }> = props => {
