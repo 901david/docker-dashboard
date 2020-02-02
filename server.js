@@ -7,7 +7,7 @@ const docker = require("./dockerapi");
 const stream = require("stream");
 const morgan = require("morgan");
 
-const PORT = process.env.PORT || 3002;
+const PORT = 5642;
 
 const openLogStreams = new Map();
 app.use(morgan("dev"));
