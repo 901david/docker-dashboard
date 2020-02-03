@@ -132,6 +132,7 @@ interface SearchBarIconBaseProps {
   manualTrigger?: boolean;
   uniqueId: string;
   isLarge: boolean;
+  clearFilter: () => void;
 }
 
 const SearchBarIcon: React.FC<SearchBarIconBaseProps> = props => {
@@ -159,6 +160,13 @@ const SearchBarIcon: React.FC<SearchBarIconBaseProps> = props => {
       magnifyLabelRef.current.click();
   }, [props.manualTrigger]);
 
+  const handleClose = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(evt.target.checked);
+    if (!evt.target.checked) {
+      props.clearFilter();
+    }
+  };
+
   return (
     <SearchBarIconWrapper
       isLarge={props.isLarge}
@@ -174,6 +182,7 @@ const SearchBarIcon: React.FC<SearchBarIconBaseProps> = props => {
         className={`search-container`}
       >
         <input
+          onChange={handleClose}
           type="checkbox"
           name="search-input"
           id={

@@ -2,7 +2,7 @@ import * as React from "react";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
 import { useMappedState } from "react-use-mapped-state";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faExpandAlt,
@@ -10,7 +10,8 @@ import {
   faCheckCircle,
   faFolderPlus,
   faFilter,
-  faTrashAlt
+  faTrashAlt,
+  faTachometerAlt
 } from "@fortawesome/free-solid-svg-icons";
 
 import SearchIcon from "./SearchIcon";
@@ -34,6 +35,7 @@ const ContainerListItemWrapper = styled.div<IContainerListItemWrapperProps>`
 
 interface ILogsHeaderWrapperProps {
   filtersDisabled: boolean;
+  isShowing: boolean;
 }
 
 const LogsHeaderWrapper = styled.div<ILogsHeaderWrapperProps>`
@@ -59,6 +61,17 @@ const LogsHeaderWrapper = styled.div<ILogsHeaderWrapperProps>`
     cursor: ${({ filtersDisabled }) =>
       filtersDisabled ? "not-allowed" : "pointer"};
     color: ${({ filtersDisabled }) => (filtersDisabled ? "#999" : "black")};
+  }
+
+  .quick-filters {
+    cursor: ${({ filtersDisabled }) =>
+      filtersDisabled ? "not-allowed" : "pointer"};
+    color: ${({ isShowing, filtersDisabled }) =>
+      !filtersDisabled
+        ? isShowing
+          ? "rgb(204,50,50)"
+          : "rgb(45,201,55)"
+        : "#999"};
   }
 `;
 
@@ -141,12 +154,26 @@ export interface Container {
   command: string;
 }
 
+type QuickFilterData = {
+  [key: string]: boolean;
+};
+
+const quickFilterDataStarterState: {
+  [key: string]: boolean;
+} = {
+  INFO: false,
+  SEVERE: false,
+  WARN: false
+};
+
 interface IContainerListItemInitialState {
   logStreams: Array<string>;
   isStreaming: boolean;
   isLarge: boolean;
   inputText: string;
   filterTriggeredByIcon: boolean;
+  quickFilterData: QuickFilterData;
+  quickFiltersOpen: boolean;
 }
 
 const ContainerListItemInitialState: IContainerListItemInitialState = {
@@ -154,7 +181,9 @@ const ContainerListItemInitialState: IContainerListItemInitialState = {
   isStreaming: false,
   isLarge: false,
   inputText: "",
-  filterTriggeredByIcon: false
+  filterTriggeredByIcon: false,
+  quickFilterData: quickFilterDataStarterState,
+  quickFiltersOpen: false
 };
 
 const SubHeaderWrapper = styled.div`
@@ -192,6 +221,18 @@ const PortsWrapper = styled.div`
   margin-left: 25px;
 `;
 
+interface IQuickFiltersWrapperProps {
+  isShowing: boolean;
+}
+
+const QuickFiltersWrapper = styled.div<IQuickFiltersWrapperProps>`
+  height: ${({ isShowing }) => (isShowing ? " 25px" : "0")};
+  overflow: hidden;
+  display: flex;
+  justify-content: space-around;
+  transition: all 0.5s;
+`;
+
 export const ContainerListItem: React.FC<Container> = ({
   id,
   name,
@@ -204,7 +245,15 @@ export const ContainerListItem: React.FC<Container> = ({
   command
 }) => {
   const [
-    { logStreams, isStreaming, isLarge, inputText, filterTriggeredByIcon },
+    {
+      logStreams,
+      isStreaming,
+      isLarge,
+      inputText,
+      filterTriggeredByIcon,
+      quickFilterData,
+      quickFiltersOpen
+    },
     valueSetter
   ] = useMappedState(ContainerListItemInitialState);
 
@@ -267,10 +316,22 @@ export const ContainerListItem: React.FC<Container> = ({
     updateLogScroll();
   }, [logStreams]);
 
-  const reg = new RegExp(`${inputText}`, "g");
+  const infoQFApplied = quickFiltersOpen && quickFilterData.INFO;
+  const warnQFApplied = quickFiltersOpen && quickFilterData.WARN;
+  const severeQFApplied = quickFiltersOpen && quickFilterData.SEVERE;
+  const infoQFReg = infoQFApplied ? "INFO" : "";
+  const warnQFReg = warnQFApplied ? "WARN" : "";
+  const severeQFReg = severeQFApplied ? "SEVERE" : "";
+  const quickFiltersApplied = infoQFApplied || warnQFApplied || severeQFApplied;
+
+  const filterToUse = [inputText, infoQFReg, warnQFReg, severeQFReg].filter(
+    filter => filter !== ""
+  );
+
+  const reg = new RegExp(`${filterToUse.join("|")}`, "g");
 
   const dataToUse =
-    inputText.length !== 0
+    inputText.length !== 0 || quickFiltersApplied
       ? logStreams.filter((stream: string) =>
           stream.match(reg) ? stream.match(reg).length > 0 : false
         )
@@ -296,6 +357,16 @@ export const ContainerListItem: React.FC<Container> = ({
     }
   };
 
+  const quickFilterSelect = (
+    evt: React.ChangeEvent<HTMLInputElement>,
+    name: string
+  ) => {
+    valueSetter("quickFilterData", {
+      ...quickFilterData,
+      [name]: evt.target.checked
+    });
+  };
+
   const handleTextChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     valueSetter("inputText", evt.target.value);
   };
@@ -307,6 +378,22 @@ export const ContainerListItem: React.FC<Container> = ({
       valueSetter("filterTriggeredByIcon", false);
     }, 1000);
   };
+
+  const clearQuickFilters = () => {
+    valueSetter("quickFilterData", quickFilterDataStarterState);
+  };
+
+  const clearFiltering = () => {
+    valueSetter("inputText", "");
+  };
+
+  const handleQuickFilterShow = () => {
+    if (!quickFiltersOpen === false) {
+      clearQuickFilters();
+    }
+    valueSetter("quickFiltersOpen", !quickFiltersOpen);
+  };
+
   return (
     <ContainerListItemWrapper isLarge={isLarge} className="give-transition">
       <ContainerHeaderWrapper>
@@ -423,7 +510,10 @@ export const ContainerListItem: React.FC<Container> = ({
 
       <div>
         <div>
-          <LogsHeaderWrapper filtersDisabled={logStreams.length === 0}>
+          <LogsHeaderWrapper
+            isShowing={quickFiltersOpen}
+            filtersDisabled={logStreams.length === 0}
+          >
             <h4>Logs</h4>
             {!isStreaming && (
               <span onClick={onPipeLogs} className="stream-logs-on">
@@ -441,6 +531,16 @@ export const ContainerListItem: React.FC<Container> = ({
                 />
               </span>
             )}
+            <span onClick={handleQuickFilterShow} className="quick-filters">
+              <FontAwesomeIcon
+                title={
+                  logStreams.length !== 0
+                    ? "Open Quick Filters"
+                    : "No Logs to Filter, Start Streaming first"
+                }
+                icon={faTachometerAlt}
+              />
+            </span>
             <span onClick={handleFilterClick} className="open-filter">
               <FontAwesomeIcon
                 title={
@@ -451,9 +551,27 @@ export const ContainerListItem: React.FC<Container> = ({
                 icon={faFilter}
               />
             </span>
+
             {/* TODO:  Clear filters button and a X for remove logs */}
           </LogsHeaderWrapper>
+          <QuickFiltersWrapper isShowing={quickFiltersOpen}>
+            {Object.keys(quickFilterData).map(filterKey => {
+              const { value } = quickFilterData[filterKey];
+              return (
+                <>
+                  <input
+                    id={filterKey}
+                    type="checkbox"
+                    onChange={value => quickFilterSelect(value, filterKey)}
+                    checked={value}
+                  />
+                  <label htmlFor={filterKey}>{filterKey}</label>
+                </>
+              );
+            })}
+          </QuickFiltersWrapper>
           <SearchIcon
+            clearFilter={clearFiltering}
             isLarge={isLarge}
             uniqueId={_.uniqueId("container-")}
             manualTrigger={filterTriggeredByIcon}
