@@ -233,6 +233,19 @@ const QuickFiltersWrapper = styled.div<IQuickFiltersWrapperProps>`
   transition: all 0.5s;
 `;
 
+const LogWrapper = styled.div`
+  overfow: scroll;
+  max-height: 500px;
+`;
+
+const QuickFilterWrapper = styled.div`
+  display: flex;
+
+  > input {
+    margin-right: 3px;
+  }
+`;
+
 export const ContainerListItem: React.FC<Container> = ({
   id,
   name,
@@ -307,10 +320,6 @@ export const ContainerListItem: React.FC<Container> = ({
       console.log(data, err);
     });
   }, []);
-
-  const logStyles = {
-    overflow: "scroll"
-  };
 
   React.useEffect(() => {
     updateLogScroll();
@@ -558,7 +567,7 @@ export const ContainerListItem: React.FC<Container> = ({
             {Object.keys(quickFilterData).map(filterKey => {
               const { value } = quickFilterData[filterKey];
               return (
-                <>
+                <QuickFilterWrapper>
                   <input
                     id={filterKey}
                     type="checkbox"
@@ -566,7 +575,7 @@ export const ContainerListItem: React.FC<Container> = ({
                     checked={value}
                   />
                   <label htmlFor={filterKey}>{filterKey}</label>
-                </>
+                </QuickFilterWrapper>
               );
             })}
           </QuickFiltersWrapper>
@@ -581,12 +590,12 @@ export const ContainerListItem: React.FC<Container> = ({
             searchClickHandler={data => console.log(data)}
           />
         </div>
-        <div ref={logRef} style={logStyles} className="panel-body">
+        <LogWrapper ref={logRef} className="panel-body">
           {dataToUse.length === 0 && <h1>No logs to show currently</h1>}
           {dataToUse.map((log: string, index: number) => {
             return <p key={index}>{log}</p>;
           })}
-        </div>
+        </LogWrapper>
       </div>
     </ContainerListItemWrapper>
   );

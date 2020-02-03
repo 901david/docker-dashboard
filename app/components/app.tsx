@@ -16,6 +16,8 @@ const Header = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  padding-left: 25px;
+  padding-right: 25px;
 
   img {
     width: 100px;
