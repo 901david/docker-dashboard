@@ -246,6 +246,14 @@ const QuickFilterWrapper = styled.div`
   }
 `;
 
+const ContainerInfo = styled.div`
+  padding: 25px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
 export const ContainerListItem: React.FC<Container> = ({
   id,
   name,
@@ -379,7 +387,6 @@ export const ContainerListItem: React.FC<Container> = ({
   const handleTextChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     valueSetter("inputText", evt.target.value);
   };
-  console.log("logs length", logStreams.length);
 
   const handleFilterClick = () => {
     valueSetter("filterTriggeredByIcon", true);
@@ -402,6 +409,8 @@ export const ContainerListItem: React.FC<Container> = ({
     }
     valueSetter("quickFiltersOpen", !quickFiltersOpen);
   };
+
+  console.log(volumes);
 
   return (
     <ContainerListItemWrapper isLarge={isLarge} className="give-transition">
@@ -430,7 +439,7 @@ export const ContainerListItem: React.FC<Container> = ({
         </ContainerHeader>
       </ContainerHeaderWrapper>
       <div style={{ transition: "all 1s", height: "300px", overflow: "auto" }}>
-        <div style={{ padding: "25px" }}>
+        <ContainerInfo>
           <ContainerStatus isRunning={isRunning}>
             <strong>Status:</strong> {status || "N/A"}
           </ContainerStatus>
@@ -459,7 +468,10 @@ export const ContainerListItem: React.FC<Container> = ({
           </p>
           <p>
             <strong>Volumes:</strong>
-            <span>{volumes.length > 0 ? volumes.join(", ") : "N/A"}</span>
+            <span>
+              {/* TODO needs to eb mapped */}
+              {volumes.length > 0 ? volumes.sort().join(", ") : "N/A"}
+            </span>
           </p>
           <span>
             <p>
@@ -467,30 +479,39 @@ export const ContainerListItem: React.FC<Container> = ({
             </p>
             <MountsWrapper>
               {mounts.length > 0
-                ? mounts.map(
-                    ({ Type, Source, Destination, Mode, RW, Propagation }) => (
-                      <>
-                        <p>
-                          <strong>Type:</strong> {Type}
-                        </p>
-                        <p>
-                          <strong>Source:</strong> {Source}
-                        </p>
-                        <p>
-                          <strong>Destination:</strong> {Destination}
-                        </p>
-                        <p>
-                          <strong>Mode:</strong> {Mode}
-                        </p>
-                        <p>
-                          <strong>RW:</strong> {RW}
-                        </p>
-                        <p>
-                          <strong>Propagation:</strong> {Propagation}
-                        </p>
-                      </>
+                ? mounts
+                    .sort()
+                    .map(
+                      ({
+                        Type,
+                        Source,
+                        Destination,
+                        Mode,
+                        RW,
+                        Propagation
+                      }) => (
+                        <>
+                          <p>
+                            <strong>Type:</strong> {Type}
+                          </p>
+                          <p>
+                            <strong>Source:</strong> {Source}
+                          </p>
+                          <p>
+                            <strong>Destination:</strong> {Destination}
+                          </p>
+                          <p>
+                            <strong>Mode:</strong> {Mode}
+                          </p>
+                          <p>
+                            <strong>RW:</strong> {RW}
+                          </p>
+                          <p>
+                            <strong>Propagation:</strong> {Propagation}
+                          </p>
+                        </>
+                      )
                     )
-                  )
                 : "  N/A"}
             </MountsWrapper>
           </span>
@@ -514,7 +535,7 @@ export const ContainerListItem: React.FC<Container> = ({
             </p>
             <span>{command || "N/A"}</span>
           </span>
-        </div>
+        </ContainerInfo>
       </div>
 
       <div>
@@ -581,13 +602,14 @@ export const ContainerListItem: React.FC<Container> = ({
           </QuickFiltersWrapper>
           <SearchIcon
             clearFilter={clearFiltering}
-            isLarge={isLarge}
             uniqueId={_.uniqueId("container-")}
             manualTrigger={filterTriggeredByIcon}
             disabled={logStreams.length === 0}
             handleTextChange={handleTextChange}
             inputText={inputText}
-            searchClickHandler={data => console.log(data)}
+            searchClickHandler={(data: string) =>
+              valueSetter("inputText", data)
+            }
           />
         </div>
         <LogWrapper ref={logRef} className="panel-body">

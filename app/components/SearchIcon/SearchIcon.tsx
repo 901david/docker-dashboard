@@ -1,5 +1,6 @@
 import * as React from "react";
 import styled, { css } from "styled-components";
+import { useMappedState } from "react-use-mapped-state";
 
 interface SearchBarIconWrapperProps {
   closeIconColor: string;
@@ -8,7 +9,7 @@ interface SearchBarIconWrapperProps {
   magnifyGlassBorderColor: string;
   disabled: boolean;
   uniqueId: string;
-  isLarge: boolean;
+  parentWidth: number;
 }
 
 const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
@@ -80,30 +81,34 @@ const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
   }
   ${({ uniqueId }) =>
     `#${uniqueId}-search-input`}:checked + #search-icon-label .magnify-glass {
-    width: ${({ isLarge }) =>
-      isLarge
-        ? css`
-            ${window.innerWidth - 123}px
-          `
-        : css`
-            ${window.innerWidth / 3 - 123 / 3}px
-          `};
+    width: ${({ parentWidth }) => {
+      return css`
+        ${parentWidth - 65}px
+      `;
+    }};
     height: 4rem;
     border-radius: 3px;
   }
   ${({ uniqueId }) =>
     `#${uniqueId}-search-input`}:checked + #search-icon-label .text-input {
     visibility: visible;
-    width: ${({ isLarge }) =>
-      isLarge ? `calc(${window.innerWidth} - "5rem")` : "25.5rem"};
+    width: ${({ parentWidth }) => {
+      return css`
+        ${parentWidth - 69}px
+      `;
+    }};
     height: 100%;
     opacity: 1;
   }
   ${({ uniqueId }) =>
     `#${uniqueId}-search-input`}:checked + #search-icon-label .close-icon-left {
     position: absolute;
-    top: 0.5rem;
-    right: ${({ isLarge }) => (isLarge ? "3rem" : "4.3rem")};
+    top: 0;
+    left: ${({ parentWidth }) => {
+      return css`
+        ${parentWidth - 61}px
+      `;
+    }};
     visibility: visible;
     opacity: 1;
     margin-left: 5px;
@@ -112,8 +117,12 @@ const SearchBarIconWrapper = styled.div<SearchBarIconWrapperProps>`
   ${({ uniqueId }) =>
     `#${uniqueId}-search-input`}:checked + #search-icon-label .close-icon-right {
     position: absolute;
-    top: 0.5rem;
-    right: ${({ isLarge }) => (isLarge ? "3rem" : "4.3rem")};
+    top: 0;
+    left: ${({ parentWidth }) => {
+      return css`
+        ${parentWidth - 56}px
+      `;
+    }};
     visibility: visible;
     opacity: 1;
     transform: rotate(-45deg);
@@ -131,11 +140,13 @@ interface SearchBarIconBaseProps {
   searchClickHandler: (userInput: string) => void;
   manualTrigger?: boolean;
   uniqueId: string;
-  isLarge: boolean;
   clearFilter: () => void;
 }
 
 const SearchBarIcon: React.FC<SearchBarIconBaseProps> = props => {
+  const [{ parentWidth }, valueSetter] = useMappedState({
+    parentWidth: 0
+  });
   const magnifyLabelRef: React.RefObject<HTMLLabelElement> = React.createRef();
   const magnifyGlassBackground = props.magnifyGlassBackground || "white";
   const magnifyGlassHandleColor = props.magnifyGlassHandleColor || "black";
@@ -160,16 +171,20 @@ const SearchBarIcon: React.FC<SearchBarIconBaseProps> = props => {
       magnifyLabelRef.current.click();
   }, [props.manualTrigger]);
 
-  const handleClose = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(evt.target.checked);
-    if (!evt.target.checked) {
-      props.clearFilter();
+  React.useEffect(() => {
+    const parentEl = document.querySelector(".give-transition");
+    if (parentEl) {
+      valueSetter("parentWidth", parentEl.getBoundingClientRect().width);
     }
+  }, [parentWidth]);
+
+  const handleClose = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    if (!evt.target.checked) props.clearFilter();
   };
 
   return (
     <SearchBarIconWrapper
-      isLarge={props.isLarge}
+      parentWidth={parentWidth}
       disabled={props.disabled}
       magnifyGlassBackground={magnifyGlassBackground}
       magnifyGlassHandleColor={magnifyGlassHandleColor}
