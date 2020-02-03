@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack -p && node server.js",
-    "start-dev": "./node_modules/.bin/concurrently \"nodemon server.js\" \"webpack --watch\"",
+    "start:dev": "./node_modules/.bin/concurrently \"nodemon server.js\" \"webpack --watch\"",
     "webpack": "webpack --watch",
     "backend": "nodemon server.js"
   },
