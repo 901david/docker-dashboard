@@ -1,0 +1,16 @@
+- 1.0.0 V1 released
+  - See all containers running on your local machine whether started or stopped
+  - Provides container information such as the following:
+    - Running or Stopped
+    - Container Id with auto-copy
+    - Image sha
+    - Any Volumes present
+    - Any Mounts present
+    - Ports used
+    - Command used to start container
+  - Start and stop containers that exist on your machine
+  - Remove stopped containers from your machine
+  - Spin up new containers with images that are already downloaded to your machine
+  - Stream logs from container
+  - Use quickfilters to filter by INFO, WARN, SEVERE
+  - Custom Filtering of logs based on input from user
