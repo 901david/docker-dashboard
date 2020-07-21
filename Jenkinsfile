@@ -24,7 +24,7 @@ pipeline {
         stage('Build Prod Image') {
             steps {
                 echo 'Building Prod Web Image....'
-                sh 'docker build -t 4990814/dock-hand .'
+                sh 'docker build -t hessine/accretio-dashboard .'
             }
         }
 
@@ -32,7 +32,7 @@ pipeline {
             steps {
                 sh '''
                 echo 'Pushing Image to Docker Hub'
-                docker push 4990814/dock-hand
+                docker push hessine/accretio-dashboard 
                 '''
             }
         }
